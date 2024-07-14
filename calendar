@@ -6,7 +6,7 @@
         {{ month }}
       </div>
     </div>
-    <div v-for="row in calendarData" :key="row.event" class="row">
+    <div v-for="row in processedCalendarData" :key="row.event" class="row">
       <div class="column fixed-column">{{ row.event }}</div>
       <div v-for="month in months" :key="month" class="column month-column">
         <div v-if="row[month]">
@@ -14,15 +14,18 @@
             v-for="(item, index) in row[month]"
             :key="index"
             placement="top-start"
-            :width="200"
+            :width="250"
             trigger="hover"
           >
             <template #default>
-              <div>日期: {{ item.date }}</div>
-              <div>详情: {{ item.details }}</div>
+              <div><strong>日期:</strong> {{ item.date }}</div>
+              <div><strong>内容:</strong> {{ item.content }}</div>
+              <div><strong>处理人:</strong> {{ item.handler }}</div>
+              <div><strong>状态:</strong> {{ item.status }}</div>
+              <div><strong>优先级:</strong> {{ item.priority }}</div>
             </template>
             <template #reference>
-              <div class="event-card">{{ item.title }}</div>
+              <div class="event-card" :class="item.priority">{{ item.content }}</div>
             </template>
           </el-popover>
         </div>
@@ -32,57 +35,81 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const months = [
   '一月', '二月', '三月', '四月', '五月', '六月',
   '七月', '八月', '九月', '十月', '十一月', '十二月'
 ]
 
-const calendarData = ref([
-  {
-    event: '会议',
-    '一月': [
-      { date: '1月15日', title: '年度计划会', details: '讨论年度目标和策略' }
-    ],
-    '四月': [
-      { date: '4月1日', title: '季度回顾', details: '第一季度业绩回顾' }
-    ],
-    '七月': [
-      { date: '7月15日', title: '中期会议', details: '半年度总结和调整' }
-    ],
-    '十月': [
-      { date: '10月1日', title: '战略会议', details: '讨论第四季度重点工作' }
-    ]
-  },
-  {
-    event: '项目里程碑',
-    '三月': [
-      { date: '3月31日', title: '阶段一完成', details: '项目第一阶段收尾' }
-    ],
-    '六月': [
-      { date: '6月30日', title: '阶段二完成', details: '项目第二阶段收尾' }
-    ],
-    '九月': [
-      { date: '9月30日', title: '阶段三完成', details: '项目第三阶段收尾' }
-    ],
-    '十二月': [
-      { date: '12月15日', title: '项目结项', details: '项目最终交付和总结' }
-    ]
-  },
-  {
-    event: '假期',
-    '一月': [
-      { date: '1月1日', title: '元旦', details: '元旦假期' }
-    ],
-    '五月': [
-      { date: '5月1日', title: '劳动节', details: '劳动节假期' }
-    ],
-    '十月': [
-      { date: '10月1日', title: '国庆节', details: '国庆节长假' }
-    ]
-  }
+// 模拟从接口获取的数据
+const rawData = ref([
+  { date: '2024-01-15', content: '年度计划会', event: '会议', handler: '张三', status: '已完成', priority: 'high' },
+  { date: '2024-02-10', content: '部门协调会', event: '会议', handler: '李四', status: '进行中', priority: 'medium' },
+  { date: '2024-03-05', content: '客户需求讨论', event: '会议', handler: '王五', status: '待开始', priority: 'low' },
+  { date: '2024-04-01', content: '季度回顾', event: '会议', handler: '赵六', status: '已完成', priority: 'high' },
+  { date: '2024-05-20', content: '产品发布会', event: '会议', handler: '孙七', status: '准备中', priority: 'high' },
+  { date: '2024-06-15', content: '团队建设活动', event: '会议', handler: '周八', status: '计划中', priority: 'medium' },
+  { date: '2024-07-15', content: '中期会议', event: '会议', handler: '吴九', status: '待确认', priority: 'high' },
+  { date: '2024-08-30', content: '技术研讨会', event: '会议', handler: '郑十', status: '已安排', priority: 'medium' },
+  { date: '2024-09-10', content: '项目进度汇报', event: '会议', handler: '张三', status: '进行中', priority: 'high' },
+  { date: '2024-10-01', content: '战略会议', event: '会议', handler: '李四', status: '已完成', priority: 'high' },
+  { date: '2024-11-11', content: '年终总结预备会', event: '会议', handler: '王五', status: '计划中', priority: 'medium' },
+  { date: '2024-12-20', content: '年终总结大会', event: '会议', handler: '赵六', status: '待安排', priority: 'high' },
+  
+  { date: '2024-03-31', content: '阶段一完成', event: '项目里程碑', handler: '项目A组', status: '已完成', priority: 'high' },
+  { date: '2024-04-15', content: '原型设计完成', event: '项目里程碑', handler: '设计组', status: '进行中', priority: 'medium' },
+  { date: '2024-05-30', content: '主体功能开发', event: '项目里程碑', handler: '开发组', status: '进行中', priority: 'high' },
+  { date: '2024-06-30', content: '阶段二完成', event: '项目里程碑', handler: '项目B组', status: '进行中', priority: 'high' },
+  { date: '2024-07-31', content: '系统测试完成', event: '项目里程碑', handler: '测试组', status: '待开始', priority: 'high' },
+  { date: '2024-08-15', content: '用户验收测试', event: '项目里程碑', handler: '客户组', status: '计划中', priority: 'medium' },
+  { date: '2024-09-30', content: '阶段三完成', event: '项目里程碑', handler: '项目C组', status: '待开始', priority: 'high' },
+  { date: '2024-10-31', content: '系统优化完成', event: '项目里程碑', handler: '优化组', status: '计划中', priority: 'medium' },
+  { date: '2024-11-30', content: '文档编写完成', event: '项目里程碑', handler: '文档组', status: '待开始', priority: 'low' },
+  { date: '2024-12-15', content: '项目结项', event: '项目里程碑', handler: '项目总监', status: '待开始', priority: 'high' },
+  
+  { date: '2024-01-01', content: '元旦', event: '假期', handler: '人事部', status: '已安排', priority: 'medium' },
+  { date: '2024-02-10', content: '春节', event: '假期', handler: '人事部', status: '已安排', priority: 'high' },
+  { date: '2024-04-04', content: '清明节', event: '假期', handler: '人事部', status: '已安排', priority: 'medium' },
+  { date: '2024-05-01', content: '劳动节', event: '假期', handler: '人事部', status: '已安排', priority: 'high' },
+  { date: '2024-06-22', content: '端午节', event: '假期', handler: '人事部', status: '已安排', priority: 'medium' },
+  { date: '2024-09-17', content: '中秋节', event: '假期', handler: '人事部', status: '已安排', priority: 'high' },
+  { date: '2024-10-01', content: '国庆节', event: '假期', handler: '人事部', status: '已安排', priority: 'high' },
 ])
+
+// 处理数据的函数
+const processData = (data) => {
+  const processedData = {}
+  data.forEach(item => {
+    const date = new Date(item.date)
+    const monthIndex = date.getMonth()
+    const monthName = months[monthIndex]
+    
+    if (!processedData[item.event]) {
+      processedData[item.event] = {}
+    }
+    
+    if (!processedData[item.event][monthName]) {
+      processedData[item.event][monthName] = []
+    }
+    
+    processedData[item.event][monthName].push({
+      date: `${monthIndex + 1}月${date.getDate()}日`,
+      content: item.content,
+      handler: item.handler,
+      status: item.status,
+      priority: item.priority
+    })
+  })
+  
+  return Object.entries(processedData).map(([event, monthData]) => ({
+    event,
+    ...monthData
+  }))
+}
+
+// 使用 computed 属性来处理数据
+const processedCalendarData = computed(() => processData(rawData.value))
 </script>
 
 <style scoped>
@@ -123,7 +150,19 @@ const calendarData = ref([
   padding: 5px;
   cursor: pointer;
   font-size: 12px;
-  background-color: #f5f5f5;
   border-radius: 4px;
+  color: white;
+}
+
+.event-card.high {
+  background-color: #ff4d4f;
+}
+
+.event-card.medium {
+  background-color: #faad14;
+}
+
+.event-card.low {
+  background-color: #52c41a;
 }
 </style>
