@@ -1,0 +1,129 @@
+<template>
+  <div class="calendar-container">
+    <div class="row header-row">
+      <div class="column fixed-column">事项</div>
+      <div v-for="month in months" :key="month" class="column month-column">
+        {{ month }}
+      </div>
+    </div>
+    <div v-for="row in calendarData" :key="row.event" class="row">
+      <div class="column fixed-column">{{ row.event }}</div>
+      <div v-for="month in months" :key="month" class="column month-column">
+        <div v-if="row[month]">
+          <el-popover
+            v-for="(item, index) in row[month]"
+            :key="index"
+            placement="top-start"
+            :width="200"
+            trigger="hover"
+          >
+            <template #default>
+              <div>日期: {{ item.date }}</div>
+              <div>详情: {{ item.details }}</div>
+            </template>
+            <template #reference>
+              <div class="event-card">{{ item.title }}</div>
+            </template>
+          </el-popover>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+
+const months = [
+  '一月', '二月', '三月', '四月', '五月', '六月',
+  '七月', '八月', '九月', '十月', '十一月', '十二月'
+]
+
+const calendarData = ref([
+  {
+    event: '会议',
+    '一月': [
+      { date: '1月15日', title: '年度计划会', details: '讨论年度目标和策略' }
+    ],
+    '四月': [
+      { date: '4月1日', title: '季度回顾', details: '第一季度业绩回顾' }
+    ],
+    '七月': [
+      { date: '7月15日', title: '中期会议', details: '半年度总结和调整' }
+    ],
+    '十月': [
+      { date: '10月1日', title: '战略会议', details: '讨论第四季度重点工作' }
+    ]
+  },
+  {
+    event: '项目里程碑',
+    '三月': [
+      { date: '3月31日', title: '阶段一完成', details: '项目第一阶段收尾' }
+    ],
+    '六月': [
+      { date: '6月30日', title: '阶段二完成', details: '项目第二阶段收尾' }
+    ],
+    '九月': [
+      { date: '9月30日', title: '阶段三完成', details: '项目第三阶段收尾' }
+    ],
+    '十二月': [
+      { date: '12月15日', title: '项目结项', details: '项目最终交付和总结' }
+    ]
+  },
+  {
+    event: '假期',
+    '一月': [
+      { date: '1月1日', title: '元旦', details: '元旦假期' }
+    ],
+    '五月': [
+      { date: '5月1日', title: '劳动节', details: '劳动节假期' }
+    ],
+    '十月': [
+      { date: '10月1日', title: '国庆节', details: '国庆节长假' }
+    ]
+  }
+])
+</script>
+
+<style scoped>
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  width: 100%;
+}
+
+.header-row {
+  font-weight: bold;
+}
+
+.column {
+  border: 1px solid #eaeaea;
+  padding: 5px;
+  flex-grow: 1;
+}
+
+.fixed-column {
+  width: 120px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.month-column {
+  width: 200px;
+  text-align: center;
+}
+
+.event-card {
+  margin: 5px;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+</style>
