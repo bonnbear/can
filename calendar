@@ -6,12 +6,12 @@
         {{ month }}
       </div>
     </div>
-    <div v-for="row in processedCalendarData" :key="row.event" class="row">
-      <div class="column fixed-column">{{ row.event }}</div>
+    <div v-for="event in eventOrder" :key="event" class="row">
+      <div class="column fixed-column">{{ event }}</div>
       <div v-for="month in months" :key="month" class="column month-column">
-        <div v-if="row[month]">
+        <div v-if="getEventData(event, month)">
           <el-popover
-            v-for="(item, index) in row[month]"
+            v-for="(item, index) in getEventData(event, month)"
             :key="index"
             placement="top-start"
             :width="250"
@@ -41,6 +41,9 @@ const months = [
   '一月', '二月', '三月', '四月', '五月', '六月',
   '七月', '八月', '九月', '十月', '十一月', '十二月'
 ]
+
+// 定义事件顺序
+const eventOrder = [ '项目里程碑','会议', '假期']
 
 // 模拟从接口获取的数据
 const rawData = ref([
@@ -80,14 +83,14 @@ const rawData = ref([
 // 处理数据的函数
 const processData = (data) => {
   const processedData = {}
+  eventOrder.forEach(event => {
+    processedData[event] = {}
+  })
+
   data.forEach(item => {
     const date = new Date(item.date)
     const monthIndex = date.getMonth()
     const monthName = months[monthIndex]
-    
-    if (!processedData[item.event]) {
-      processedData[item.event] = {}
-    }
     
     if (!processedData[item.event][monthName]) {
       processedData[item.event][monthName] = []
@@ -102,14 +105,16 @@ const processData = (data) => {
     })
   })
   
-  return Object.entries(processedData).map(([event, monthData]) => ({
-    event,
-    ...monthData
-  }))
+  return processedData
 }
 
 // 使用 computed 属性来处理数据
 const processedCalendarData = computed(() => processData(rawData.value))
+
+// 获取特定事件和月份的数据
+const getEventData = (event, month) => {
+  return processedCalendarData.value[event]?.[month] || []
+}
 </script>
 
 <style scoped>
