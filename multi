@@ -1,0 +1,209 @@
+在 Vue 3 中使用 Vue CLI 创建多入口打包配置，你需要修改 `vue.config.js` 文件，并使用 `pages` 选项来定义多个入口。下面是一个示例配置，详细解释了如何配置多入口打包文件：
+
+1. **创建 Vue 项目**：
+
+   ```bash
+   vue create my-multi-entry-project
+   ```
+
+2. **进入项目目录**：
+
+   ```bash
+   cd my-multi-entry-project
+   ```
+
+3. **修改 `vue.config.js` 文件**：
+
+   在项目根目录创建或修改 `vue.config.js` 文件，添加以下配置：
+
+   ```javascript
+   module.exports = {
+     pages: {
+       index: {
+         // page 的入口
+         entry: 'src/main.js',
+         // 模板来源
+         template: 'public/index.html',
+         // 在 dist/index.html 的输出
+         filename: 'index.html',
+         // 当使用 title 选项时，
+         // template 中的 title 标签需要是 <title><%= htmlWebpackPlugin.options.title %></title>
+         title: 'Index Page',
+         // 在这个页面中包含的块，默认情况下会包含
+         // 提取出来的通用 chunk 和 vendor chunk。
+         chunks: ['chunk-vendors', 'chunk-common', 'index']
+       },
+       about: {
+         entry: 'src/about/main.js',
+         template: 'public/about.html',
+         filename: 'about.html',
+         title: 'About Page',
+         chunks: ['chunk-vendors', 'chunk-common', 'about']
+       }
+     }
+   }
+   ```
+
+4. **创建额外的入口文件和模板**：
+
+   假设你有一个关于页面 `about`，你需要在 `src` 目录下创建 `about` 文件夹，并添加 `main.js` 作为入口文件，同时在 `public` 目录下创建 `about.html` 作为模板文件。
+
+   - **src/about/main.js**:
+
+     ```javascript
+     import { createApp } from 'vue';
+     import About from './About.vue';
+
+     createApp(About).mount('#app');
+     ```
+
+   - **public/about.html**:
+
+     ```html
+     <!DOCTYPE html>
+     <html lang="en">
+     <head>
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <title><%= htmlWebpackPlugin.options.title %></title>
+     </head>
+     <body>
+       <div id="app"></div>
+     </body>
+     </html>
+     ```
+
+5. **调整主入口文件**：
+
+   确保你的主入口文件 `src/main.js` 和 `public/index.html` 已经正确配置。
+
+   - **src/main.js**:
+
+     ```javascript
+     import { createApp } from 'vue';
+     import App from './App.vue';
+
+     createApp(App).mount('#app');
+     ```
+
+   - **public/index.html**:
+
+     ```html
+     <!DOCTYPE html>
+     <html lang="en">
+     <head>
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <title><%= htmlWebpackPlugin.options.title %></title>
+     </head>
+     <body>
+       <div id="app"></div>
+     </body>
+     </html>
+     ```
+
+6. **运行构建命令**：
+
+   运行以下命令来构建项目：
+
+   ```bash
+   npm run build
+   ```
+
+   这将会在 `dist` 目录中生成 `index.html` 和 `about.html` 及其相关资源文件。
+
+通过以上配置，你就可以在 Vue 3 项目中使用 Vue CLI 实现多入口打包。每个入口页面都可以拥有独立的入口文件、模板文件和页面标题等配置。
+在 Vue CLI 创建的 Vue 3 项目中配置多入口打包，你需要修改 `vue.config.js` 文件。以下是配置多入口打包的步骤和示例：
+
+1. 在项目根目录创建 `vue.config.js` 文件（如果还没有的话）。
+
+2. 在 `vue.config.js` 中添加以下配置：
+
+```javascript
+const { defineConfig } = require('@vue/cli-service')
+const path = require('path')
+
+module.exports = defineConfig({
+  pages: {
+    index: {
+      // 主入口
+      entry: 'src/main.js',
+      template: 'public/index.html',
+      filename: 'index.html',
+      title: 'Main Page',
+    },
+    subpage: {
+      // 第二个入口
+      entry: 'src/subpage/main.js',
+      template: 'public/subpage.html',
+      filename: 'subpage.html',
+      title: 'Sub Page',
+    },
+    // 可以继续添加更多入口...
+  },
+  configureWebpack: {
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, 'src'),
+      },
+    },
+  },
+})
+```
+
+这个配置做了以下几件事：
+
+- 定义了两个入口：`index` 和 `subpage`。
+- 每个入口都指定了自己的 entry 文件、模板文件、输出文件名和标题。
+- 使用 `configureWebpack` 选项添加了一个路径别名 `@`，指向 `src` 目录。
+
+3. 确保你的项目结构与配置相匹配。例如：
+
+```
+project-root/
+├── public/
+│   ├── index.html
+│   └── subpage.html
+├── src/
+│   ├── main.js
+│   └── subpage/
+│       └── main.js
+└── vue.config.js
+```
+
+4. 在每个入口文件（如 `src/main.js` 和 `src/subpage/main.js`）中，你需要创建和挂载 Vue 应用：
+
+```javascript
+// src/main.js
+import { createApp } from 'vue'
+import App from './App.vue'
+
+createApp(App).mount('#app')
+
+// src/subpage/main.js
+import { createApp } from 'vue'
+import SubApp from './SubApp.vue'
+
+createApp(SubApp).mount('#app')
+```
+
+5. 确保你有相应的 HTML 模板文件（如 `public/index.html` 和 `public/subpage.html`）。
+
+6. 运行构建命令：
+
+```
+npm run build
+```
+
+这将为每个入口生成单独的 HTML、JS 和 CSS 文件。
+
+注意事项：
+
+- 确保每个入口都有自己的 Vue 实例和根组件。
+- 如果你使用路由，每个入口可能需要自己的路由配置。
+- 共享的组件和资源可以放在公共目录中，以便多个入口使用。
+- 根据需要，你可能需要调整 webpack 的分包策略，以优化多入口的加载性能。
+
+这种配置允许你为不同的页面或应用部分创建单独的构建，每个都有自己的入口点。这对于构建具有显著不同功能的大型应用程序特别有用。
+
+如果你在实施过程中遇到任何具体问题，欢迎随时询问。
